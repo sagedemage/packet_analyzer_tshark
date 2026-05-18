@@ -10,9 +10,8 @@ def start_capture():
     start_time = time.time()
     live_capture.sniff(packet_count=20, timeout=100)
 
-    i = 1
     for packet in live_capture:
-        num = i
+        num = packet.number
         source_ip = ""
         destination_ip = ""
         protocol = packet.highest_layer
@@ -36,8 +35,6 @@ def start_capture():
 
         # Num, Time, Source, Destination, Protocol, Lenght, Info
         print(f"Num: {num}, Time: {packet_time:.9f}, Source: {source_ip}, Destination: {destination_ip}, Protocol: {protocol}, Length: {frame_length}")
-
-        i += 1
     
     live_capture.close()
 
