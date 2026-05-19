@@ -7,10 +7,10 @@ import json
 from pyshark.capture.live_capture import UnknownInterfaceException
 
 def check_interface(iface_name):
-    live_capture = None
     loop = asyncio.new_event_loop()
+    live_capture = pyshark.LiveCapture(interface=iface_name, eventloop=loop)
+
     try:
-        live_capture = pyshark.LiveCapture(interface=iface_name, eventloop=loop)
         live_capture.sniff(packet_count=20, timeout=100)
         live_capture.close()
         return True
