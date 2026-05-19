@@ -42,7 +42,6 @@ def start_capture():
         "start_timestamp": now_timestamp
     }
 
-    # Write to JSON file
     with open("data/program_exe.json", "w") as f:
         json.dump(data, f)
     
