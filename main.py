@@ -28,7 +28,6 @@ def get_packet_data(packet: Packet, timestamp: float):
         source_ip = packet.eth.src
         destination_ip = packet.eth.dst
 
-    # Num, Time, Source, Destination, Protocol, Lenght, Info
     print(f"Num: {num}, Time: {packet_time:.9f}, Source: {source_ip}, Destination: {destination_ip}, Protocol: {protocol}, Length: {frame_length}")
 
 def start_capture():
