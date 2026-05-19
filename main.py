@@ -4,6 +4,19 @@ import sys
 from pyshark.packet.packet import Packet
 from datetime import datetime
 import json
+from pyshark.capture.live_capture import UnknownInterfaceException
+
+def check_interface(iface_name):
+    live_capture = None
+    loop = asyncio.new_event_loop()
+    try:
+        live_capture = pyshark.LiveCapture(interface=iface_name, eventloop=loop)
+        live_capture.sniff(packet_count=20, timeout=100)
+        live_capture.close()
+        return True
+    except UnknownInterfaceException:
+        live_capture.close()
+        return False
 
 def get_packet_data(packet: Packet, timestamp: float):
     num = packet.number
@@ -30,27 +43,29 @@ def get_packet_data(packet: Packet, timestamp: float):
 
     print(f"Num: {num}, Time: {packet_time:.9f}, Source: {source_ip}, Destination: {destination_ip}, Protocol: {protocol}, Length: {frame_length}")
 
-def start_capture():
+def start_capture(iface_name: str):
     loop = asyncio.new_event_loop()
+    if check_interface(iface_name):
+        live_capture = pyshark.LiveCapture(interface=iface_name, eventloop=loop, output_file='data/output.pcapng')
 
-    live_capture = pyshark.LiveCapture(interface='Ethernet', eventloop=loop, output_file='data/output.pcapng')
+        now = datetime.now()
+        now_timestamp = now.timestamp()
 
-    now = datetime.now()
-    now_timestamp = now.timestamp()
+        data = {
+            "start_timestamp": now_timestamp
+        }
 
-    data = {
-        "start_timestamp": now_timestamp
-    }
-
-    with open("data/program_exe.json", "w") as f:
-        json.dump(data, f)
+        with open("data/program_exe.json", "w") as f:
+            json.dump(data, f)
     
-    live_capture.sniff(packet_count=20, timeout=100)
+        live_capture.sniff(packet_count=20, timeout=100)
 
-    for packet in live_capture:
-        get_packet_data(packet, now_timestamp)
+        for packet in live_capture:
+            get_packet_data(packet, now_timestamp)
     
-    live_capture.close()
+        live_capture.close()
+    else:
+        print(f"Interface {iface_name} invalid")
 
 def read_capture():
     loop = asyncio.new_event_loop()
@@ -67,6 +82,10 @@ def read_capture():
 
     file_capture.close()
 
+def help_usage():
+    print("Usage:")
+    print("sniff i <interface_name> -> sniff packets on a specified interface")
+    print("read -> read packet data from a file")
 
 def main():
     if len(sys.argv) > 1:
@@ -74,18 +93,20 @@ def main():
 
         match flag:
             case "sniff":
-                start_capture()
+                if len(sys.argv) > 3:
+                    interface_flag = sys.argv[2]
+                    if interface_flag == "i":
+                        iface_name = sys.argv[3]
+                        start_capture(iface_name)
+                else:
+                    help_usage()
             case "read":
                 read_capture()
             case _:
                 print(f"Flag {flag} not supported\n")
-                print("Usage:")
-                print("sniff -> sniff packets")
-                print("read -> read packet data from a file")
+                help_usage()
     else:
-        print("Usage:")
-        print("sniff -> sniff packets")
-        print("read -> read packet data from a file")
+        help_usage()
 
 if __name__ == "__main__":
     main()
