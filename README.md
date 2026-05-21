@@ -11,3 +11,13 @@ Apply the new group membership without logging out and back in
 ```
 newgrp wireshark
 ```
+
+Install dependencies
+```
+poetry install
+```
+
+Run the program
+```
+poetry run python main.py sniff i Ethernet
+```
